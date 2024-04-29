@@ -1,0 +1,1630 @@
+---
+title: "Social_Media_Final"
+author: "Deviprasad Saka"
+date: "2024-04-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(ggplot2)
+library(cowplot)
+library(caret)
+library(e1071)
+library(pROC)
+```
+
+```{r}
+
+# Read the CSV file
+data <- read.csv("D:/Multivariate Analysis/Final_Project/Project/Social_media_Final/SM/social_media_final.csv", row.names=1)
+
+# View the first few rows of the data
+data
+
+```
+
+
+```{r}
+head(data)
+```
+
+```{r}
+## Data Cleansing and Prep
+colnames(data) <- c("Instagram", "LinkedIn", "Snapchat", "Twitter", "Whatsapp", "Youtube", "OTT", "Reddit", "Trouble_sleep", "Mood", "Tired_morning")
+
+head(data)
+
+```
+
+
+```{r}
+str(data)
+```
+
+```{r}
+# DATA CLEANING
+
+data[data == "?"] <- NA
+data$Instagram <- as.factor(data$Instagram)
+data$LinkedIn <- as.factor(data$LinkedIn)
+data$Snapchat <- as.factor(data$Snapchat)
+data$Youtube <- as.factor(data$Youtube)
+data$OTT <- as.factor(data$OTT)
+data$Reddit <- as.factor(data$Reddit)
+data$Trouble_sleep <- as.factor(data$Trouble_sleep)
+data$Mood <- as.factor(data$Mood)
+data$Tired_morning <- as.factor(data$Tired_morning)
+
+data$Instagram <- as.numeric(as.character(data$Instagram))
+data$Instagram <- cut(data$Instagram, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+data$LinkedIn <- as.numeric(as.character(data$LinkedIn))
+data$LinkedIn <- cut(data$LinkedIn, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+
+data$Snapchat <- as.numeric(as.character(data$Snapchat))
+data$Snapchat <- cut(data$Snapchat, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+
+data$Twitter <- as.numeric(as.character(data$Twitter))
+data$Twitter <- cut(data$Twitter, breaks = c(-Inf, 4, Inf), labels = c("Less hours", "More hours"))
+
+data$Whatsapp <- as.numeric(as.character(data$Whatsapp))
+data$Whatsapp <- cut(data$Whatsapp, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+data$OTT <- as.numeric(as.character(data$OTT))
+data$OTT <- cut(data$OTT, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+data$Reddit <- as.numeric(as.character(data$Reddit))
+data$Reddit <- cut(data$Reddit, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+data$Youtube <- as.numeric(as.character(data$Youtube))
+data$Youtube <- cut(data$Youtube, breaks = c(-Inf, 6, Inf), labels = c("Less hours", "More hours"))
+
+str(data)
+
+```
+
+
+
+
+
+```{r}
+# Load the required libraries
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+library(psych)
+```
+
+```{r}
+# Read the CSV file
+social_media_final <- read.csv("D:/Multivariate Analysis/Final_Project/Project/Social_media_Final/SM/social_media_final.csv")
+
+# View the first few rows of the data
+head(social_media_final)
+```
+
+
+```{r}
+# Descriptive statistics
+summary(social_media_final)
+```
+
+```{r}
+# Check for missing values
+sum(is.na(social_media_final))
+```
+
+
+
+
+
+```{r}
+# Define the column indices for the required columns (2 to 12)
+rc <- 2:12
+
+# Subset dataframe to include only the required columns
+cor_matrix <- cor(social_media_final[, rc])
+
+# Plot correlation matrix
+corrplot(cor_matrix, type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+
+```
+
+
+```{r}
+# Define the column indices for the required columns (2 to 12)
+rc <- 2:12
+
+# Subset dataframe to include only the required columns
+selected_data <- social_media_final[, rc]
+
+# Plot scatterplot matrix
+pairs(selected_data)
+
+```
+
+
+```{r}
+# Define colors for the box plots
+boxplot_colors <- c("skyblue", "lightgreen", "salmon")
+
+# Box plots for dependent variables (columns 10, 11, and 12)
+par(mfrow = c(1, 3))  # Adjusting the layout to show plots side by side
+
+# Box plot for column 10 (Trouble_falling_asleep)
+boxplot(social_media_final[, 10], main = "Trouble falling asleep", xlab = "", col = boxplot_colors[1])
+
+# Box plot for column 11 (Mood)
+boxplot(social_media_final[, 11], main = "Mood", xlab = "", col = boxplot_colors[2])
+
+# Box plot for column 12 (Productivity)
+boxplot(social_media_final[, 12], main = "Productivity", xlab = "", col = boxplot_colors[3])
+
+
+```
+
+
+```{r}
+# Load necessary library
+library(ggplot2)
+
+# Subset the data to include only the required variables
+selected_vars <- c("Instagram_Usage", "LinkedIn_Usage", "Snapchat_Usage", 
+                   "Twitter_Usage", "Whatsapp_Usage", "Youtube_Usage", 
+                   "OTT", "Reddit")
+
+# Create boxplots for each variable with better visualization
+boxplots <- lapply(selected_vars, function(var) {
+  ggplot(social_media_final, aes_string(y = var)) +
+    geom_boxplot(fill = "#77AADD", color = "#3366CC", alpha = 0.7) +
+    labs(title = paste("Boxplot of", var), y = var) +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 14, face = "bold"),
+          axis.title.y = element_text(size = 12),
+          axis.text = element_text(size = 10),
+          legend.position = "none") +
+    coord_flip()  # Horizontal boxplot for better readability
+})
+
+# Arrange and display the boxplots
+gridExtra::grid.arrange(grobs = boxplots, ncol = 2)
+
+
+```
+
+
+
+```{r}
+# Define colors for the histograms
+histogram_colors <- c("skyblue", "lightgreen", "salmon")
+
+# Histogram plots for dependent variables (columns 10, 11, and 12)
+par(mfrow = c(1, 3))  # Adjusting the layout to show plots side by side
+
+# Histogram plot for column 10 (Trouble_falling_asleep)
+hist(social_media_final[, 10], main = "Trouble falling asleep", xlab = "", col = histogram_colors[1])
+
+# Histogram plot for column 11 (Mood)
+hist(social_media_final[, 11], main = "Mood", xlab = "", col = histogram_colors[2])
+
+# Histogram plot for column 12 (Productivity)
+hist(social_media_final[, 12], main = "Productivity", xlab = "", col = histogram_colors[3])
+
+```
+
+
+
+
+```{r}
+
+# Density plots for Trouble_falling_asleep vs. continuous variables
+ggplot(social_media_final, aes(x = Instagram_Usage, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Instagram Usage by Trouble Falling Asleep",
+       x = "Instagram Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = LinkedIn_Usage, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of LinkedIn Usage by Trouble Falling Asleep",
+       x = "LinkedIn Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = Snapchat_Usage, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Snapchat Usage by Trouble Falling Asleep",
+       x = "Snapchat Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = Twitter_Usage, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Twitter Usage by Trouble Falling Asleep",
+       x = "Twitter Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = Whatsapp_Usage, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Whatsapp Usage by Trouble Falling Asleep",
+       x = "Whatsapp Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = Youtube_Usage, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Youtube Usage by Trouble Falling Asleep",
+       x = "Youtube Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = OTT, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of OTT Usage by Trouble Falling Asleep",
+       x = "OTT Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+ggplot(social_media_final, aes(x = Reddit, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Reddit Usage by Trouble Falling Asleep",
+       x = "Reddit Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep")
+
+
+```
+
+```{r}
+library(ggplot2)
+library(tidyr)
+
+# Reshape data into long format
+social_media_long <- pivot_longer(social_media_final, 
+                                  cols = c(Instagram_Usage, LinkedIn_Usage, Snapchat_Usage, 
+                                           Twitter_Usage, Whatsapp_Usage, Youtube_Usage, 
+                                           OTT, Reddit),
+                                  names_to = "variable", 
+                                  values_to = "value")
+
+# Density plots for Trouble_falling_asleep vs. continuous variables
+ggplot(social_media_long, aes(x = value, fill = factor(Trouble_falling_asleep))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plots of Various Social Media Usages by Trouble Falling Asleep",
+       x = "Usage",
+       y = "Density",
+       fill = "Trouble Falling Asleep") +
+  facet_wrap(~ variable, scales = "free_x", nrow = 3)
+
+
+```
+
+
+```{r}
+
+# Density plots for Mood_Productivity vs. continuous variables
+ggplot(social_media_final, aes(x = Instagram_Usage, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Instagram Usage by Mood Productivity",
+       x = "Instagram Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = LinkedIn_Usage, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of LinkedIn Usage by Mood Productivity",
+       x = "LinkedIn Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = Snapchat_Usage, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Snapchat Usage by Mood Productivity",
+       x = "Snapchat Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = Twitter_Usage, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Twitter Usage by Mood Productivity",
+       x = "Twitter Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = Whatsapp_Usage, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Whatsapp Usage by Mood Productivity",
+       x = "Whatsapp Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = Youtube_Usage, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Youtube Usage by Mood Productivity",
+       x = "Youtube Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = OTT, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of OTT Usage by Mood Productivity",
+       x = "OTT Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+ggplot(social_media_final, aes(x = Reddit, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Reddit Usage by Mood Productivity",
+       x = "Reddit Usage",
+       y = "Density",
+       fill = "Mood Productivity")
+
+
+```
+
+
+```{r}
+
+library(ggplot2)
+library(tidyr)
+
+# Reshape data into long format
+social_media_long <- pivot_longer(social_media_final, 
+                                  cols = c(Instagram_Usage, LinkedIn_Usage, Snapchat_Usage, 
+                                           Twitter_Usage, Whatsapp_Usage, Youtube_Usage, 
+                                           OTT, Reddit),
+                                  names_to = "variable", 
+                                  values_to = "value")
+
+# Density plots for Trouble_falling_asleep vs. continuous variables
+ggplot(social_media_long, aes(x = value, fill = factor(Mood_Prod))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plots of Various Social Media Usages by mood productivity",
+       x = "Usage",
+       y = "Density",
+       fill = "mood productivity") +
+  facet_wrap(~ variable, scales = "free_x", nrow = 3)
+
+
+```
+
+
+```{r}
+# Density plots for each independent variable vs. Tired_waking_up_in_morning
+ggplot(social_media_final, aes(x = Instagram_Usage, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Instagram Usage by Tired waking up in morning",
+       x = "Instagram Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = LinkedIn_Usage, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of LinkedIn Usage by Tired waking up in morning",
+       x = "LinkedIn Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = Snapchat_Usage, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Snapchat Usage by Tired waking up in morning",
+       x = "Snapchat Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = Twitter_Usage, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Twitter Usage by Tired waking up in morning",
+       x = "Twitter Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = Whatsapp_Usage, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Whatsapp Usage by Tired waking up in morning",
+       x = "Whatsapp Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = Youtube_Usage, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Youtube Usage by Tired waking up in morning",
+       x = "Youtube Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = OTT, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of OTT Usage by Tired waking up in morning",
+       x = "OTT Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+ggplot(social_media_final, aes(x = Reddit, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Reddit Usage by Tired waking up in morning",
+       x = "Reddit Usage",
+       y = "Density",
+       fill = "Tired waking up in morning")
+
+```
+
+
+
+```{r}
+library(ggplot2)
+library(tidyr)
+
+# Reshape data into long format
+social_media_long <- pivot_longer(social_media_final, 
+                                  cols = c(Instagram_Usage, LinkedIn_Usage, Snapchat_Usage, 
+                                           Twitter_Usage, Whatsapp_Usage, Youtube_Usage, 
+                                           OTT, Reddit),
+                                  names_to = "variable", 
+                                  values_to = "value")
+
+# Density plots for Trouble_falling_asleep vs. continuous variables
+ggplot(social_media_long, aes(x = value, fill = factor(Tired_waking_up_in_morning))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plots of Various Social Media Usages by Tired_waking_up_in_morning",
+       x = "Usage",
+       y = "Density",
+       fill = "Tired_waking_up_in_morning") +
+  facet_wrap(~ variable, scales = "free_x", nrow = 3)
+
+
+```
+
+
+```{r}
+library(ggplot2)
+
+# Distribution plots for all variables
+ggplot(social_media_final, aes(x = Instagram_Usage)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = "Distribution of Instagram Usage")
+
+ggplot(social_media_final, aes(x = LinkedIn_Usage)) +
+  geom_density(fill = "red", alpha = 0.5) +
+  labs(title = "Distribution of LinkedIn Usage")
+
+ggplot(social_media_final, aes(x = Snapchat_Usage)) +
+  geom_density(fill = "green", alpha = 0.5) +
+  labs(title = "Distribution of Snapchat Usage")
+
+ggplot(social_media_final, aes(x = Twitter_Usage)) +
+  geom_density(fill = "orange", alpha = 0.5) +
+  labs(title = "Distribution of Twitter Usage")
+
+ggplot(social_media_final, aes(x = Whatsapp_Usage)) +
+  geom_density(fill = "purple", alpha = 0.5) +
+  labs(title = "Distribution of Whatsapp Usage")
+
+ggplot(social_media_final, aes(x = Youtube_Usage)) +
+  geom_density(fill = "cyan", alpha = 0.5) +
+  labs(title = "Distribution of Youtube Usage")
+
+ggplot(social_media_final, aes(x = OTT)) +
+  geom_density(fill = "magenta", alpha = 0.5) +
+  labs(title = "Distribution of OTT Usage")
+
+ggplot(social_media_final, aes(x = Reddit)) +
+  geom_density(fill = "yellow", alpha = 0.5) +
+  labs(title = "Distribution of Reddit Usage")
+
+ggplot(social_media_final, aes(x = Trouble_falling_asleep)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = "Distribution of Trouble falling asleep")
+
+ggplot(social_media_final, aes(x = Mood_Prod)) +
+  geom_density(fill = "red", alpha = 0.5) +
+  labs(title = "Distribution of Mood Productivity")
+
+ggplot(social_media_final, aes(x = Tired_waking_up_in_morning)) +
+  geom_density(fill = "green", alpha = 0.5) +
+  labs(title = "Distribution of Tired waking up in morning")
+```
+
+
+```{r}
+library(ggplot2)
+library(patchwork)
+
+# Density plots for all variables
+plot_instagram <- ggplot(social_media_final, aes(x = Instagram_Usage)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = "Distribution of Instagram Usage")
+
+plot_linkedin <- ggplot(social_media_final, aes(x = LinkedIn_Usage)) +
+  geom_density(fill = "red", alpha = 0.5) +
+  labs(title = "Distribution of LinkedIn Usage")
+
+plot_snapchat <- ggplot(social_media_final, aes(x = Snapchat_Usage)) +
+  geom_density(fill = "green", alpha = 0.5) +
+  labs(title = "Distribution of Snapchat Usage")
+
+plot_twitter <- ggplot(social_media_final, aes(x = Twitter_Usage)) +
+  geom_density(fill = "orange", alpha = 0.5) +
+  labs(title = "Distribution of Twitter Usage")
+
+plot_whatsapp <- ggplot(social_media_final, aes(x = Whatsapp_Usage)) +
+  geom_density(fill = "purple", alpha = 0.5) +
+  labs(title = "Distribution of Whatsapp Usage")
+
+plot_youtube <- ggplot(social_media_final, aes(x = Youtube_Usage)) +
+  geom_density(fill = "cyan", alpha = 0.5) +
+  labs(title = "Distribution of Youtube Usage")
+
+plot_ott <- ggplot(social_media_final, aes(x = OTT)) +
+  geom_density(fill = "magenta", alpha = 0.5) +
+  labs(title = "Distribution of OTT Usage")
+
+plot_reddit <- ggplot(social_media_final, aes(x = Reddit)) +
+  geom_density(fill = "yellow", alpha = 0.5) +
+  labs(title = "Distribution of Reddit Usage")
+
+plot_trouble <- ggplot(social_media_final, aes(x = Trouble_falling_asleep)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = "Distribution of Trouble falling asleep")
+
+plot_mood <- ggplot(social_media_final, aes(x = Mood_Prod)) +
+  geom_density(fill = "red", alpha = 0.5) +
+  labs(title = "Distribution of Mood Productivity")
+
+plot_tired <- ggplot(social_media_final, aes(x = Tired_waking_up_in_morning)) +
+  geom_density(fill = "green", alpha = 0.5) +
+  labs(title = "Distribution of Tired waking up in morning")
+
+# Combine plots using patchwork
+combined_plots <- plot_instagram + plot_linkedin + plot_snapchat + plot_twitter +
+  plot_whatsapp + plot_youtube + plot_ott + plot_reddit + plot_trouble +
+  plot_mood + plot_tired
+
+# Print combined plots
+combined_plots
+
+
+
+```
+
+
+
+
+```{r}
+# Count the occurrences of each category in the dependent variables
+trouble_falling_asleep_counts <- table(social_media_final$Trouble_falling_asleep)
+mood_prod_counts <- table(social_media_final$Mood_Prod)
+tired_waking_up_counts <- table(social_media_final$Tired_waking_up_in_morning)
+
+# Create a color palette for the pie charts
+colors <- c("#FF9999", "#66B2FF")
+
+# Create pie charts for each variable with better visualization
+par(mfrow = c(1, 3))  # Arrange plots in a 1x3 grid
+
+# Pie chart for Trouble falling asleep
+pie(trouble_falling_asleep_counts, 
+    main = "Trouble falling asleep",
+    col = colors,
+    labels = c("No", "Yes"),
+    cex = 0.8)  # Adjust label size
+
+# Pie chart for Mood Productivity
+pie(mood_prod_counts, 
+    main = "Mood Productivity",
+    col = colors,
+    labels = c("High", "Low"),
+    cex = 0.8)  # Adjust label size
+
+# Pie chart for Tired waking up in morning
+pie(tired_waking_up_counts, 
+    main = "Tired waking up in morning",
+    col = colors,
+    labels = c("No", "Yes"),
+    cex = 0.8)  # Adjust label size
+
+```
+
+```{r}
+
+# Count the occurrences of each category in the dependent variables
+trouble_falling_asleep_counts <- table(social_media_final$Trouble_falling_asleep)
+mood_prod_counts <- table(social_media_final$Mood_Prod)
+tired_waking_up_counts <- table(social_media_final$Tired_waking_up_in_morning)
+
+# Create a data frame for plotting
+data <- data.frame(
+  Variable = c("Trouble falling asleep", "Mood Productivity", "Tired waking up in morning"),
+  Yes = c(trouble_falling_asleep_counts[2], mood_prod_counts[2], tired_waking_up_counts[2]),
+  No = c(trouble_falling_asleep_counts[1], mood_prod_counts[1], tired_waking_up_counts[1])
+)
+
+# Reshape the data for plotting
+library(tidyr)
+data_long <- pivot_longer(data, cols = c("Yes", "No"), names_to = "Status", values_to = "Count")
+
+# Plot the bar plot
+library(ggplot2)
+ggplot(data_long, aes(x = Variable, y = Count, fill = Status)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Counts of Yes and No for Dependent Variables",
+       x = "Dependent Variable",
+       y = "Count") +
+  scale_fill_manual(values = c("#FF9999", "#66B2FF")) +  # Custom colors for Yes and No
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
+
+
+```
+
+
+```{r}
+
+# Load necessary libraries if not already loaded
+library(ggplot2)
+
+# Define the dependent variables
+dependent_variables <- c("Trouble_falling_asleep", "Mood_Prod", "Tired_waking_up_in_morning")
+
+# Define the independent variables
+independent_variables <- c("Instagram_Usage", "LinkedIn_Usage", "Snapchat_Usage", 
+                            "Twitter_Usage", "Whatsapp_Usage", "Youtube_Usage", "OTT", "Reddit")
+
+# Loop through each dependent variable
+for (dep_var in dependent_variables) {
+  # Loop through each independent variable
+  for (ind_var in independent_variables) {
+    # Create a scatter plot for the relationship between the dependent and independent variables
+    plot <- ggplot(social_media_final, aes_string(x = ind_var, y = dep_var)) + 
+      geom_point() + 
+      geom_smooth(method = "lm") +
+      labs(title = paste("Relationship between", dep_var, "and", ind_var))
+    
+    # Print the plot
+    print(plot)
+  }
+}
+
+```
+
+
+```{r}
+# Mean and Variance Analysis
+mean_var_analysis <- function(data, variable_name) {
+  mean_val <- mean(data[[variable_name]])
+  var_val <- var(data[[variable_name]])
+  
+  cat("Variable:", variable_name, "\n")
+  cat("Mean:", mean_val, "\n")
+  cat("Variance:", var_val, "\n\n")
+}
+
+# Apply the function to each variable
+mean_var_analysis(social_media_final, "Instagram_Usage")
+mean_var_analysis(social_media_final, "LinkedIn_Usage")
+mean_var_analysis(social_media_final, "Snapchat_Usage")
+mean_var_analysis(social_media_final, "Twitter_Usage")
+mean_var_analysis(social_media_final, "Whatsapp_Usage")
+mean_var_analysis(social_media_final, "Youtube_Usage")
+mean_var_analysis(social_media_final, "OTT")
+mean_var_analysis(social_media_final, "Reddit")
+mean_var_analysis(social_media_final, "Trouble_falling_asleep")
+mean_var_analysis(social_media_final, "Mood_Prod")
+mean_var_analysis(social_media_final, "Tired_waking_up_in_morning")
+
+
+```
+
+```{r}
+
+# Define a function to perform F-test and t-test
+perform_tests <- function(variable_name, data) {
+  # Perform F-test
+  f_test <- var.test(data[[variable_name]] ~ data$Trouble_falling_asleep)
+  
+  # Perform t-test
+  t_test <- t.test(data[[variable_name]] ~ data$Trouble_falling_asleep)
+  
+  # Print results
+  cat("Variable:", variable_name, "\n")
+  cat("F-test results:\n")
+  cat("  F-statistic:", f_test$statistic, "\n")
+  cat("  p-value:", f_test$p.value, "\n\n")
+  cat("t-test results:\n")
+  cat("  t-statistic:", t_test$statistic, "\n")
+  cat("  p-value:", t_test$p.value, "\n\n")
+}
+
+# Perform tests for each variable
+perform_tests("Instagram_Usage", social_media_final)
+perform_tests("LinkedIn_Usage", social_media_final)
+perform_tests("Snapchat_Usage", social_media_final)
+perform_tests("Twitter_Usage", social_media_final)
+perform_tests("Whatsapp_Usage", social_media_final)
+perform_tests("Youtube_Usage", social_media_final)
+perform_tests("OTT", social_media_final)
+perform_tests("Reddit", social_media_final)
+
+
+
+```
+
+
+
+```{r}
+sm <- read.csv("C:/Users/sakad/Downloads/social_media_cleaned.csv")
+str(sm)
+
+```
+
+
+```{r}
+sm1 <- sm[, 2:9]
+sm1
+```
+
+PCA
+Q: How do relation  between social media platforms inform our understanding of user behavior and interactions?
+
+```{r}
+#Get the correlations between the variables 
+cor(sm1, use = "complete.obs")
+```
+
+The result is a correlation matrix showing the relationships between different social media platforms based on their usage patterns or user engagement. Each cell in the matrix represents the correlation coefficient between pairs of platforms, ranging from -1 to 1. A value of 1 indicates a perfect positive correlation (when one platform's usage increases, the other's also tends to increase), while -1 indicates a perfect negative correlation (when one platform's usage increases, the other's tends to decrease). 
+
+For instance, the correlation between Instagram and LinkedIn is 0.097, suggesting a weak positive correlation, implying that users who engage more with Instagram may also have a slight tendency to engage more with LinkedIn. Conversely, the correlation between Twitter and Whatsapp/Wechat is -0.496, indicating a moderate negative correlation, implying that users who are highly active on Twitter may be less active on Whatsapp/Wechat, and vice versa.
+
+The diagonal elements (where the platform is compared to itself) always have a correlation coefficient of 1 since a platform perfectly correlates with itself. This matrix helps understand how different social media platforms are related to each other in terms of user engagement or usage patterns, which can be valuable for marketers, researchers, and social media strategists in understanding user behavior and optimizing their strategies across multiple platforms.
+
+
+
+
+Q: What are the implications of the rotated factor loadings on social media platforms in understanding their associations and contributions to different dimensions captured by principal components in factor analysis or principal component analysis?
+
+
+```{r}
+#Computing Principal Components
+social_pca <- prcomp(sm1,scale=TRUE)
+social_pca
+
+```
+
+The provided result represents the rotated factor loadings from a factor analysis or principal component analysis (PCA) of various social media platforms. In such analyses, multiple variables (in this case, social media platforms) are examined to identify underlying factors or components that explain the shared variance among them. The table shows the loadings of each social media platform on the identified principal components (PCs), denoted as PC1 through PC8. Each row corresponds to a social media platform, and each column represents a principal component. 
+
+For Example:
+- Instagram has high positive loadings on PC1, PC2, and PC3, indicating a strong association with these components.
+- LinkedIn loads highly on PC1 and PC5 but negatively on PC2 and PC7, suggesting a more complex relationship with these components.
+- Snapchat shows a substantial loading on PC3 but negligible loadings on other components, implying its strong association with PC3 only.
+
+These loadings represent the correlation between each social media platform and the identified components. Higher absolute values (close to 1) suggest a stronger relationship, while values closer to 0 indicate a weaker association. The rotated factor loadings help in interpreting the underlying structure of the data, revealing which social media platforms are closely related and how they contribute to different dimensions captured by the principal components.
+
+
+```{r}
+summary(social_pca)
+```
+
+```{r}
+eigen_social<- social_pca$sdev^2
+eigen_social
+```
+
+The PCA analysis reveals that PC1 and PC2 together contribute approximately 50% of the total variance.
+
+
+
+Q: What the variance explained by each component, and how does it suggest the number of components to retain for analysis?
+
+Screeplot
+
+```{r}
+plot(eigen_social, xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+```
+
+From this Scree diagram, we can see that the first component has a variance just above 2.0, and the variance decreases with each additional component. The curve starts to flatten out after the third component, suggesting that retaining the first two or three components might be appropriate for this particular analysis. Components beyond this point are often considered to contribute less to explaining the variance and may be less meaningful.
+
+```{r}
+plot(log(eigen_social), xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+```
+
+Based on the scree plot, it's advantageous to include PC1 through PC5, as they collectively explain 84% of the total variance.
+
+Visualization using Principal Components
+
+```{r}
+library(FactoMineR)
+library("factoextra")
+res.pca <- PCA(sm1, graph = FALSE)
+fviz_pca_var(res.pca, col.var = "black")
+```
+
+
+Factor Analysis
+```{r}
+# load library for factor analysis
+library(ggplot2)
+library(psych)
+
+```
+
+
+Q: Determine the optimal number of factors for your dataset?
+```{r}
+fa.parallel(sm1)
+```
+
+Parallel analysis indicates that both the number of factors and the number of components are zero.
+
+
+Q: Provide an explanation for the output of your factor model?
+```{r}
+fit.pc <- principal(sm1, nfactors=2, rotate="varimax")
+fit.pc
+```
+
+- Large absolute values (near 1) signify a robust association between the variable and the factor.
+- h2 quantifies the extent to which factors account for variable variance.
+- u2 denotes the portion of variance not captured by the factors.
+
+Principal Components Analysis
+Call: principal(r = sm1, nfactors = 2, rotate = "varimax")
+Standardized loadings (pattern matrix) based upon correlation matrix
+
+                       RC1  RC2
+SS loadings           2.27 1.80
+Proportion Var        0.25 0.20
+Cumulative Var        0.25 0.45
+Proportion Explained  0.56 0.44
+Cumulative Proportion 0.56 1.00
+
+Mean item complexity =  1.3
+Test of the hypothesis that 2 components are sufficient.
+
+The root mean square of the residuals (RMSR) is  0.14 
+ with the empirical chi square  29.01  with prob <  0.066 
+ 
+
+```{r}
+round(fit.pc$values, 3)
+```
+
+
+```{r}
+fit.pc$loadings
+```
+```{r}
+# Communalities
+fit.pc$communality
+
+```
+```{r}
+# Rotated factor scores, Notice the columns ordering: RC1, RC2
+fit.pc
+fit.pc$scores
+
+```
+```{r}
+fa.plot(fit.pc) # See Correlations within Factors
+
+```
+
+
+Q: Show the columns that go into each factor?
+```{r}
+fa.diagram(fit.pc) # Visualize the relationship
+
+```
+
+This displays a diagram titled "Components Analysis," which seems to represent a factor analysis or a similar statistical method that groups different social media platforms into components based on their relationships. The platforms listed are WhatsApp/WeChat, YouTube, Instagram, LinkedIn, SnapChat, Twitter, OTT, and Reddit.
+
+Two components are identified in the diagram: RC1 and RC2. RC1 is linked with four platforms: YouTube, Instagram, LinkedIn, and WhatsApp/WeChat, with respective loadings of 0.7, 0.7, 0.7, and 0.6. RC2 is associated with Twitter, OTT, and Reddit, with loadings of 0.8, 0.8, and 0.5 respectively. The loadings represent how strongly each platform is related to the respective component, with higher values indicating a stronger relationship.
+
+
+Creating visual representations utilizing the factors.
+
+```{r}
+#very simple structure visualization
+vss(sm1)
+
+```
+
+The analysis suggests that a simpler structure with one factor is sufficient, as indicated by a maximum of 0.61 for VSS complexity 1 and a minimum of 0.06 for Velicer MAP. However, considering other criteria such as BIC and sample size-adjusted BIC, a model with five factors appears to be the most appropriate, with BIC reaching a minimum of -53.17 and sample size-adjusted BIC at 1.47.
+
+
+```{r}
+# Computing Correlation Matrix
+corrm.social <- cor(sm1)
+corrm.social
+
+```
+
+```{r}
+plot(corrm.social)
+
+```
+
+Q: What is the significance of each principal component in explaining the variance and capturing the underlying structure of the data in the factor analysis?
+
+```{r}
+social_pca <- prcomp(sm1, scale=TRUE)
+summary(social_pca)
+
+```
+
+The results represents the importance of each principal component (PC) in the factor analysis. The standard deviation indicates the variability captured by each PC, with PC1 having the highest at 1.4937 and subsequent PCs decreasing in magnitude. The proportion of variance signifies the percentage of total variance explained by each PC, with PC1 contributing the most at 27.89% and subsequent PCs decreasing in importance. The cumulative proportion shows the accumulated contribution of each PC to the total variance, with PC1 accounting for 27.89% and subsequent PCs incrementally adding to reach 100%. This information helps understand the significance of each PC in capturing the underlying structure of the data, with PC1 being the most influential, followed by subsequent PCs in descending order of importance.
+
+```{r}
+plot(social_pca)
+
+```
+
+Q: What are the main insights obtained from the relationship between social media platforms and individual observations in the factor analysis?
+Biplot
+
+```{r}
+biplot(fit.pc)
+
+```
+
+The biplot visualizes the results of a factor analysis, showing the relationship between various social media platforms and services (represented by red arrows) and the scores of individual observations (represented by black dots) across two principal components, RC1 and RC2. The social media platforms—Twitter, OTT content, Reddit, LinkedIn, YouTube, Instagram, Snapchat, and Whatsapp/Wechat—are plotted as vectors, with their direction and length indicating their contribution and correlation to the components. Platforms with similar orientations have similar factor profiles, suggesting comparable characteristics or usage patterns. The position of the data points indicates how each observation scores on the components, with clustering points suggesting groups with similar factor scores. The biplot is a useful tool for interpreting the underlying structure of the data, revealing the dominant patterns of variation and the relationships between the variables and observations.
+
+
+Cluster Analysis
+
+```{r}
+library(MASS)
+library(factoextra)
+library(ggplot2)
+library(readxl)
+library(factoextra)
+library(ggfortify)
+library(ggrepel)
+library(stats)
+
+# Load required library
+library(readxl)
+
+# Define the file path
+file_path <- "C:/Users/sakad/Downloads/social_media_cleaned.xlsx"
+
+# Read the Excel file
+body <- read_excel(file_path)
+
+# Standardize the dataset excluding the first variable which is categorical
+data.scaled <- scale(x = body[, -1], center = TRUE, scale = TRUE)
+
+# Assign the standardized data to 'data'
+data <- data.scaled
+
+# Display the first few rows of 'data'
+head(data)
+
+```
+
+Q: What is the proportion of variance explained by the first three principal components in the PCA analysis, and how does it impact the effectiveness of the subsequent K-means clustering algorithm in identifying distinct clusters within the data?
+
+```{r}
+# Perform PCA
+pc <- prcomp(data.scaled)
+
+# Extract the first three principal components
+pc_first_three <- pc$x[, 1:3]
+
+# Perform K-means clustering on the first three principal components
+set.seed(123)  # For reproducibility
+k <- 3  # Number of clusters
+km_clusters <- kmeans(pc_first_three, centers = k)
+
+# Define colors for each cluster
+cluster_colors <- c("red", "blue", "green")
+
+# Plot the first three principal components with cluster assignments
+plot(pc_first_three, col = cluster_colors[km_clusters$cluster], 
+     main = "First Three Principal Components with Cluster Assignments", 
+     xlab = "", ylab = "", pch = 20)
+
+```
+
+
+This above code first performs Principal Component Analysis (PCA) on scaled data, reducing its dimensionality. Then, it extracts the first three principal components. Next, it applies K-means clustering to these components, dividing data into three clusters. Finally, it plots the first three principal components with color-coded cluster assignments for visualization and analysis.
+
+
+Q: Can hierarchical clustering based on the first three principal components effectively reveal underlying patterns or groupings within the dataset, and how do the relationships between samples, as depicted in the dendrogram, reflect the distances in the reduced-dimensional space?
+```{r}
+
+# Perform PCA
+pc <- prcomp(data.scaled)
+
+# Extract the first three principal components
+pc_first_three <- pc$x[, 1:3]
+
+# Take a subset of 20 rows
+data_subset <- data[1:20, ]
+
+# Perform PCA
+pca_result <- prcomp(data_subset)
+
+# Extract the first three principal components
+pc_first_three <- pca_result$x[, 1:3]
+
+# Perform hierarchical clustering on the first three principal components
+hc <- hclust(dist(pc_first_three))
+
+# Plot the dendrogram
+plot(hc, main = "Dendrogram of Hierarchical Clustering (Subset of 20 Rows)",
+     xlab = "Sample Index", ylab = "Distance", sub = NULL)
+```
+
+The plot shows the first three principal components, performs hierarchical clustering on them, and plots a dendrogram showing the relationships between the samples based on their distances in the reduced-dimensional space.
+
+
+Q: What is the degree of separation or distinctiveness among the identified clusters when analyzing the distribution of data points in the two-dimensional space formed by the first two Principal Components?
+```{r}
+# Visualize cluster and membership using first two Principal Components
+fviz_cluster(list(data = pc$x[, 1:2], cluster = km_clusters$cluster))
+```
+
+This plot visualizes clustering results by plotting data points in a two-dimensional space using the first two Principal Components. Each point is colored according to its assigned cluster, showing the grouping pattern identified by the clustering algorithm. It helps understand how data points are grouped based on their features.
+
+
+```{r}
+# Non-hierarchical clustering (k-means)
+num_clusters <- 2  
+kmeans_model <- kmeans(data, centers = num_clusters)
+
+# Membership for each cluster
+table(kmeans_model$cluster)
+```
+
+This represents clustering using the k-means algorithm, dividing data into two clusters. It initializes cluster centers randomly, assigning each data point to the nearest cluster. The table function counts the number of data points assigned to each cluster, providing insight into cluster membership and distribution.
+
+
+
+
+
+Q: What is the distribution of cluster sizes obtained through k-means clustering when applied to the dataset using the first two principal components, and how does it compare to the distribution of cluster sizes obtained from clustering in the original feature space?
+```{r}
+# Visualize cluster and membership using first two Principal Components
+fviz_cluster(list(data = pc$x[, 1:2], cluster = kmeans_model$cluster))
+```
+
+This plot visualizes clusters and their memberships using the first two principal components. It extracts these components from the data, then assigns each data point to a cluster using k-means clustering. Finally, it creates a visual representation showing how the data points are grouped based on their similarities in the first two principal components.
+
+
+Q: What is the relationship between the clustering results obtained through k-means algorithm and the underlying structure of the data as revealed by Principal Component Analysis (PCA)?
+```{r}
+# Visualize cluster and membership using first two Principal Components for k-means
+pca_result <- prcomp(data, scale = TRUE)
+fviz_cluster(kmeans_model, data = pca_result$x[, 1:2], geom = "point", 
+             pointsize = 2, fill = "white", main = "K-means Clustering Result (PCA)")
+```
+ 
+ This shows visualization of the clusters and their memberships using the first two Principal Components (PCs) obtained from the PCA (Principal Component Analysis) of the numerical data. First, it computes the PCA result for the numerical data and scales it. Then, it uses the `fviz_cluster` function to plot the clusters obtained from the k-means algorithm (`kmeans_model`). It represents each data point as a point on the plot, with the size set to 2 and colored white. The plot is titled "K-means Clustering Result (PCA)". This visualization helps to understand how the data points are grouped into clusters based on their similarities, as revealed by the PCA analysis.
+
+
+Q:What is the relationship between the number of clusters (k) and the average silhouette width in k-means clustering, and how does this relationship inform the determination of the optimal number of clusters for a given dataset?
+```{r}
+library(factoextra)
+library(cluster)
+
+# Calculate silhouette information for k-means clustering
+sil <- silhouette(kmeans_model$cluster, dist(data))
+
+# Visualize the silhouette plot for k-means clustering
+fviz_silhouette(sil, main = "Silhouette Plot for K-means Clustering")
+
+```
+
+This plot calculates and visualizes the silhouette information for k-means clustering. Silhouette analysis helps evaluate the quality of clustering by measuring how similar an object is to its own cluster compared to other clusters. A higher silhouette width indicates better separation of clusters, while negative values suggest that points might be assigned to the wrong clusters. This plot helps in determining the optimal number of clusters for k-means clustering and assessing the overall clustering performance.
+
+
+
+
+
+
+Q: Is there a significant difference in the clustering patterns based on Linkedin and Youtube among different groups represented by distinct colors on the plot?
+```{r}
+# Create a data frame with cluster membership
+data_clustered <- data.frame(data, Cluster = kmeans_model$cluster)  # Ensure conversion to data frame
+
+# Scatter plot of data points colored by cluster membership
+plot(data_clustered$LinkedIn, data_clustered$youtube, 
+     col = data_clustered$Cluster, pch = 16, 
+     xlab = "Linkedin", ylab = "youtube",  
+     main = "Scatter Plot of Clustering")
+legend("topright", legend = unique(data_clustered$Cluster), 
+       col = 1:max(data_clustered$Cluster), pch = 16, title = "Cluster")
+
+```
+
+Overall, this plot visualizes clusters in the data, helping us understand
+how data points group together based on the Linkedin and Youtube, with each group 
+represented by a different color on the plot.
+
+
+
+
+```{r}
+sm <- read.csv("D:/Multivariate Analysis/Social media regression/social_media_cleaned.csv")
+str(sm)
+
+```
+
+#Multiple Regression
+
+```{r}
+sm2 <- sm[, 2:10]
+sm2
+
+```
+
+Q1.Model Development
+```{r}
+# Performing multiple regression on the dataset
+fit <- lm(sm2$How.you.felt.the.entire.week. ~ Instagram + LinkedIn + SnapChat + Twitter + Whatsapp.Wechat + youtube + OTT + Reddit, data = sm2)
+
+# Show the results
+summary(fit)
+
+
+
+```
+
+The linear regression model predicts "How you felt the entire week?" based on social media usage variables including Instagram, LinkedIn, SnapChat, Twitter, Whatsapp/Wechat, youtube, OTT, and Reddit. Coefficients represent the estimated effect of each predictor variable on the response variable. However, most coefficients are not statistically significant at the 0.05 level, indicating weak evidence of association. The model explains approximately 28.07% of the variability in "How you felt the entire week?" as indicated by the multiple R-squared value. Nonetheless, the adjusted R-squared value is negative, suggesting potential issues with model fit or overfitting. The overall model is not statistically significant according to the F-statistic with a p-value of 0.7725.
+
+```{r}
+coefficients(fit)
+```
+The coefficients represent the estimated impact of each social media platform on "How you felt the entire week?" The positive coefficients for LinkedIn, Twitter, Whatsapp/Wechat, and YouTube suggest a potential positive association with mood, while negative coefficients for Instagram, OTT, and Reddit imply a negative association. The intercept represents the estimated mood score when all predictors are zero.
+
+```{r}
+fitted(fit)
+```
+Residual Analysis
+
+```{r}
+library(GGally)
+ggpairs(data=sm2, title="Social-Media")
+```
+
+```{r}
+plot(fit, which=1) # Residuals vs Fitted
+plot(fit, which=2) # Normal Q-Q plot
+
+```
+
+This graph is a Q-Q (Quantile-Quantile) plot, which is a diagnostic tool used to assess the normality of a dataset's distribution. The x-axis represents the theoretical quantiles, while the y-axis shows the standardized residuals.In an ideal normal distribution, the points would fall along a straight diagonal line. However, in this plot, the points show some deviation from the diagonal, particularly in the tails. This suggests the data may not fully conform to a normal distribution and could indicate the presence of outliers or other non-normal characteristics. The Q-Q plot provides a visual way to evaluate the assumption of normality, which is an important consideration in many statistical analyses. Identifying departures from normality can inform the choice of appropriate modeling techniques or the need for further data exploration and transformation.
+
+
+
+```{r}
+residuals <- residuals(fit)
+```
+
+```{r}
+#Plot residuals against fitted values to check for homoscedasticity
+plot_resid_fitted <- ggplot() +
+  geom_point(aes(x = fitted(fit), y = residuals)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(x = "Fitted Values", y = "Residuals",
+       title = "Residuals vs Fitted Values Plot") +
+  theme_minimal()
+print(plot_resid_fitted)
+
+```
+
+This graph is a Residuals vs Fitted Values plot, which is a common diagnostic tool used in regression analysis. The key points about this plot are:
+
+1. The x-axis represents the fitted values from the regression model, while the y-axis shows the residuals (the differences between the observed and predicted values).
+
+2. The plot displays the relationship between the fitted values and the residuals. Ideally, the residuals should be randomly scattered around the horizontal line at y = 0, with no clear patterns or trends.
+
+3. In this plot, the residuals appear to be randomly distributed around the zero line, suggesting the regression model is adequately capturing the relationships in the data and the assumptions of the model are met.
+
+This plot allows the analyst to visually assess the linearity, homoscedasticity, and independence of the residuals, which are important assumptions for the validity of the regression analysis.
+
+The residual vs. fitted plot is a diagnostic tool used to assess the suitability of a regression model and its adherence to key assumptions. By examining the dispersion of points around the zero line, one can ascertain whether the model accurately captures the data's underlying patterns or if adjustments are needed. If a discernible pattern emerges, it suggests inadequacies in the model's fit.
+
+Q2 Prediction
+
+```{r}
+predict(fit, newdata = data.frame(Instagram = 8, LinkedIn = 5, SnapChat = 4, Twitter = 4, 
+                                  `Whatsapp/Wechat` = 4, youtube = 8, OTT = 3, Reddit = 4))
+
+```
+Q3:  Model Accuracy
+```{r}
+#Make predictions using the model
+predicted <- predict(fit, newdata = sm2)
+```
+
+```{r}
+#Calculating RMSE by taking the square root of the mean of the squared differences between the actual values and the predicted values (predicted)
+rmse <- sqrt(mean((sm2$How.you.felt.the.entire.week. - predicted)^2))
+rmse
+```
+
+RMSE is a measure of the differences between values predicted by a model and the observed values. In this case, an RMSE value of 0.6177979 indicates that, on average, the model's predictions deviate from the observed values by approximately 0.6177979 units. A lower RMSE value indicates better performance of the model in terms of prediction accuracy.Low RMSE0.617797 between 0 and 1 indicates that the models predictions are quite accurate, with small deviations from the actual values.
+
+
+Visualizations
+
+```{r}
+library(car)
+#Nonlinearity
+# component + residual plot
+crPlots(fit)
+```
+
+These are component plus residual plots (also known as partial regression plots) for different social media platforms and services like Instagram, LinkedIn, Snapchat, Twitter, WhatsApp/WeChat, YouTube, OTT, and Reddit. Each graph displays the relationship between the response variable and a predictor variable, controlling for the effects of other predictors in the model. The x-axis shows the component plus residual values for a predictor, while the y-axis shows the residuals from the model. The plots help to identify non-linear relationships, outliers, and the influence of individual data points on the regression fit, with the pink curve indicating the trend.
+
+```{r}
+# plot studentized residuals vs. fitted values
+library(car)
+spreadLevelPlot(fit)
+```
+
+This graph is a Spread-Level Plot for model fit, typically used to assess variance homogeneity in residuals from regression analysis. The x-axis represents the fitted values from a model, while the y-axis shows the absolute standardized residuals. The plot reveals patterns in the spread of residuals across the range of fitted values. If residuals are evenly spread, it suggests homoscedasticity. Here, a curve (pink solid line) is fitted through the data points, and a reference dashed line is also provided. The upward trend of the curve suggests increasing variability of residuals as fitted values rise, indicating potential heteroscedasticity.
+
+
+#Logistic_regression
+```{r}
+library(ggplot2)
+library(cowplot)
+#library(regclass)
+library(caret)
+```
+
+
+```{r}
+library(e1071)
+library(pROC)
+
+```
+
+
+```{r}
+data <- read.csv("D:/Multivariate Analysis/Assignment-8/social_media_final.csv", row.names=1)
+data
+```
+
+
+```{r}
+head(data)
+```
+
+
+```{r}
+
+xtabs(~ Tired.waking.up.in.morning + Instagram_Usage, data=data)
+```
+
+
+```{r}
+xtabs(~ Tired.waking.up.in.morning + LinkedIn_Usage, data=data)
+
+```
+
+
+```{r}
+xtabs(~ Tired.waking.up.in.morning + Snapchat_Usage, data=data)
+```
+
+
+```{r}
+xtabs(~ Tired.waking.up.in.morning + Twitter_Usage, data=data)
+```
+
+
+```{r}
+xtabs(~ Tired.waking.up.in.morning + Youtube_Usage, data=data)
+```
+
+
+```{r}
+xtabs(~ Tired.waking.up.in.morning + OTT, data=data)
+```
+
+
+```{r}
+xtabs(~ Tired.waking.up.in.morning + Reddit, data=data)
+```
+
+
+Q1: Model Developement
+```{r}
+logistic_simple <- glm(Tired.waking.up.in.morning ~ Instagram_Usage, data=data, family="binomial")
+summary(logistic_simple)
+```
+
+The logistic regression model suggests that Instagram usage is not a significant predictor of feeling tired upon waking up in the morning (p = 0.669). The intercept indicates a baseline tiredness level of approximately -1.08475 when Instagram usage is zero, with a small increase in tiredness log-odds (0.06669) for each unit increase in Instagram usage. The model's fit is modest, with slightly lower residual deviance compared to null deviance, and an AIC of 30.55.
+
+
+```{r}
+
+Less_hours.log.odds <- -1.08475
+Less_hours.log.odds
+```
+
+
+```{r}
+more_hours.log.odds.ratio <- 0.06669
+more_hours.log.odds.ratio
+
+```
+
+
+```{r}
+predicted.data <- data.frame(probability.of.hd=logistic_simple$fitted.values, Instagram=data$Instagram_Usage)
+predicted.data
+```
+
+
+```{r}
+xtabs(~ probability.of.hd + Instagram, data=predicted.data)
+```
+
+The table provides a matrix of probabilities indicating the likelihood of having a certain condition (possibly "hd") for individuals with varying levels of Instagram usage. Each row corresponds to a specific probability of having the condition, while each column represents a different level of Instagram usage. The values in the table denote the probability of having the condition for individuals at the intersection of a particular Instagram usage level and probability row. For instance, an individual with an Instagram usage level of 3.5 has a 29.9% probability of having the condition, while an individual with an Instagram usage level of 12.1 has a 43.1% probability.
+
+
+Q2.Model Acceptance
+```{r}
+logistic <- glm(Tired.waking.up.in.morning ~ ., data=data, family="binomial")
+summary(logistic)
+```
+
+The logistic regression model aims to predict tiredness upon waking up in the morning based on various factors. The coefficients indicate the effect of each predictor on tiredness likelihood. Notably, none of the predictors show significant effects, as indicated by their high p-values (all > 0.05). The model's fit is excellent, evidenced by the extremely low residual deviance and AIC, suggesting it explains the data well. However, the coefficients' magnitudes are notably large, possibly indicating issues like multicollinearity or overfitting.
+
+
+Q3.Residual Analysis
+```{r}
+anova(logistic)
+
+```
+
+
+```{r}
+#"Pseudo R-squared" and its p-value
+ll.null <- logistic$null.deviance/-2
+ll.proposed <- logistic$deviance/-2
+(ll.null - ll.proposed) / ll.null
+```
+
+The pseudo R-squared value resulting from the provided code is one, it suggests that the proposed model perfectly fits the data compared to the null model. This indicates that all variability in the response variable is explained by the predictors, implying a highly significant improvement in model fit.
+
+
+```{r}
+# The p-value for the R^2
+1 - pchisq(2*(ll.proposed - ll.null), df=(length(logistic$coefficients)-1))
+```
+
+
+A p-value of 0.002869279 for the R^2 indicates that the improvement in model fit compared to the null model is statistically significant. This suggests strong evidence against the null hypothesis, supporting the conclusion that the proposed model provides a better fit to the data than the null model.
+
+
+Q4.Prediction
+```{r}
+
+library(ggplot2)
+
+# Create predicted data frame
+predicted.data <- data.frame(probability.of.hd = logistic$fitted.values,
+                              Tired.waking.up.in.morning = data$Tired.waking.up.in.morning)
+predicted.data <- predicted.data[order(predicted.data$probability.of.hd, decreasing = FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+
+# Plot using ggplot with a smooth line
+ggplot(data = predicted.data, aes(x = rank, y = probability.of.hd)) +
+  geom_point(aes(color = factor(Tired.waking.up.in.morning)), alpha = 0.7, shape = 16, size = 3) +  # Larger points for better visibility
+  geom_smooth(method = "loess", se = FALSE, linetype = "dotted", color = "blue") +  # Add a smoothed line
+  scale_color_manual(values = c("blue", "red"), labels = c("Not Tired", "Tired")) +  # Custom color scheme
+  labs(x = "Index", y = "Predicted Probability of Feeling Tired upon Waking Up") +  # Custom axis labels
+  theme_minimal() +  # Minimalist theme
+  theme(legend.position = "right")  # Legend position
+
+```
+
+The plot is a graphical representation of a predictive model, depicting the probability of feeling tired upon waking up in the morning against an index. Blue dots labeled "Not Tired" represent lower probabilities, while red dots labeled "Tired" indicate higher probabilities. The model suggests a threshold around the index 15, where there's a significant increase in the predicted probability of feeling tired. The dotted line likely represents a fitted curve, showing how the probability changes across different index values, with a steep incline around the threshold. This visualization could be used to understand factors influencing morning tiredness or evaluate a model predicting tiredness.
+
+
+```{r}
+# From Caret
+pdata <- predict(logistic,newdata=data,type="response" )
+pdata
+
+```
+
+
+```{r}
+data$Tired.waking.up.in.morning
+```
+
+
+Q5: Accuracy
+```{r}
+pdataF <- as.factor(ifelse(test=as.numeric(pdata>0.5) == 0, yes="0", no="1"))
+data$Tired.waking.up.in.morning <- factor(data$Tired.waking.up.in.morning, levels = c("0", "1"))
+levels(pdataF) <- levels(data$Tired.waking.up.in.morning)
+confusionMatrix(pdataF, data$Tired.waking.up.in.morning)
+```
+
+
+The confusion matrix presents the classification results of a binary classifier. It shows that out of 21 instances, 14 were correctly classified as 0 and 7 as 1, yielding perfect accuracy of 1. The Kappa statistic also indicates perfect agreement beyond chance. Sensitivity, specificity, positive predictive value, and negative predictive value are all 1, indicating perfect performance in both identifying positive and negative cases. The balanced accuracy, which considers imbalanced class sizes, is also 1. Overall, the model demonstrates exceptional performance, accurately classifying all instances with high confidence.
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE)
+```
+
+The image displays a Receiver Operating Characteristic (ROC) curve, which is a graphical representation of a binary classification system's diagnostic ability. The curve plots sensitivity (true positive rate) on the y-axis against 1-specificity (false positive rate) on the x-axis across different threshold settings. This particular ROC curve showcases an ideal scenario where the classifier achieves perfect sensitivity and specificity, indicating that it can perfectly distinguish between the two classes without error. The diagonal line represents the performance of a random guess, and the plot shows that the classifier's performance is significantly above random chance, marking it as an excellent model.
+
+
+```{r}
+par(pty = "s")
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE)
+```
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE, legacy.axes=TRUE)
+
+```
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE, legacy.axes=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage")
+```
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE, legacy.axes=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4)
+
+```
+
+
+```{r}
+roc.info <- roc(data$Tired.waking.up.in.morning, logistic$fitted.values, legacy.axes=TRUE)
+```
+
+
+```{r}
+str(roc.info)
+```
+
+
+# tpp(true positive percentage) &  fpp(false positive precentage)
+```{r}
+roc.df <- data.frame(tpp=roc.info$sensitivities*100, fpp=(1 - roc.info$specificities)*100, thresholds=roc.info$thresholds)
+roc.df
+```
+
+
+```{r}
+head(roc.df)
+```
+
+The table provides data on true positive percentages (TPP), false positive percentages (FPP), and corresponding thresholds for a classification task. Each row represents a threshold value, with associated TPP and FPP. As the threshold decreases, TPP remains consistently high at 100%, while FPP also remains constant at 100%. This suggests that regardless of the threshold chosen, the classification consistently results in all instances being classified as positive, indicating potential issues with model performance or data imbalance.
+
+
+```{r}
+tail(roc.df)
+```
+
+
+```{r}
+roc.df[roc.df$tpp > 60 & roc.df$tpp < 80,]
+```
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE, legacy.axes=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4, percent=TRUE)
+```
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE, legacy.axes=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4, percent=TRUE, print.auc=TRUE)
+```
+
+
+```{r}
+roc(data$Tired.waking.up.in.morning, logistic$fitted.values, plot=TRUE, legacy.axes=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4, percent=TRUE, print.auc=TRUE, partial.auc=c(100, 90), auc.polygon = TRUE, auc.polygon.col = "#377eb822", print.auc.x=45)
+```
+
+
+```{r}
+# Lets do two roc plots to understand which model is better
+roc(data$Tired.waking.up.in.morning, logistic_simple$fitted.values, plot=TRUE, legacy.axes=TRUE, percent=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4, print.auc=TRUE)
+```
+
+
+#LDA(Linear_Discriminate_Analysis
+```{r}
+library(MASS)
+library(readxl)
+library(ROCR)
+
+mydata <- read_excel("D:/Multivariate Analysis/Assignment-9/social_media_cleaned (1).xlsx")
+mydata$Binary_tfs <- ifelse(mydata$Tired_waking_in_morning == "1", 1, 0)
+```
+
+
+
+Q1: Model Developement
+```{r}
+lda_model <- lda(Binary_tfs ~ Instagram +	LinkedIn + SnapChat + Twitter +	`Whatsapp/Wechat` +	youtube +	OTT +	Reddit, data = mydata)
+```
+
+The provided code performs Linear Discriminant Analysis (LDA) using the `lda` function from the `MASS` package in R. It creates an LDA model named `lda_model` to classify the binary response variable `Binary_tfs` based on the predictor variables `Instagram`, `LinkedIn`, `SnapChat`, `Twitter`, `Whatsapp/Wechat`, `youtube`, `OTT`, and `Reddit`. The predictor variables are separated by `+` in the formula, and the response variable is separated from the predictors by `~`. The data frame `mydata` is specified as the source of the variables. After running this code, the `lda_model` object can be used for obtaining coefficients, predicted values, and other model diagnostics.
+
+
+
+
+Q2: Model Acceptance
+
+```{r}
+summary(lda_model)
+print(lda_model)
+```
+
+The provided output is from a Linear Discriminant Analysis (LDA) model trained to classify the binary response variable `Binary_tfs` using the predictor variables `Instagram`, `LinkedIn`, `SnapChat`, `Twitter`, `Whatsapp/Wechat`, `youtube`, `OTT`, and `Reddit`. The prior probabilities show the proportions of each class (0.667 for 0 and 0.333 for 1) in the data. The group means provide the mean values of each predictor for the two classes, indicating how the classes differ in terms of these variables. The coefficients of the linear discriminant (LD1) represent the importance and direction of influence of each predictor on the classification, with larger absolute values indicating higher importance. For example, `Twitter` has the largest negative coefficient (-0.906), suggesting higher Twitter usage is associated with class 0, while `LinkedIn` has a relatively large negative coefficient (-0.207), implying lower LinkedIn usage is linked to class 0. These coefficients can be used to interpret the model and understand the relationships between the predictors and the response variable.
+
+Q3: Residual Analysis
+
+```{r}
+plot(lda_model)
+```
+
+Group 0: This histogram has a somewhat symmetrical distribution with a slight skew to the right. There are two prominent peaks around the -0.5 and 0.5 values on the x-axis, which suggests that there are more observations around those values. The bins around -2, -1, 0, and 1 have fewer observations. This could indicate a bimodal distribution or that the variable has two common values within this group.
+
+Group 1: The histogram for this group shows a different distribution, with the highest frequency observed in the far right bin, around the value of 1 on the x-axis. This peak is noticeably higher than the others, indicating a concentration of observations in that bin. The histogram also shows a moderate number of observations around -1 and 0, with fewer observations in the bins at the extremes of -2 and 1. This distribution suggests that the variable has a common value around 1, with other values being less frequent.
+
+Overall, the histograms suggest that the two groups have different distributions of the same variable, with group 0 having a more evenly spread or bimodal distribution and group 1 having a right-skewed distribution with a concentration of observations at the higher end of the scale. Without further context, such as units or labels for the x-axis, we cannot determine the exact nature of the variable being measured.
+
+
+Q4:Prediction
+```{r}
+lda_predictions <- predict(lda_model, newdata = mydata)
+lda_predictions
+
+predicted_classes <- lda_predictions$class
+predicted_classes
+lda_predictions$x
+
+predicted_probabilities <- as.data.frame(lda_predictions$posterior)
+predicted_probabilities
+pred <- prediction(predicted_probabilities[,2], mydata$Binary_tfs)
+```
+
+Q5: Model Accuracy
+
+```{r}
+roc.perf = performance(pred, measure = "tpr", x.measure = "fpr")
+auc.train <- performance(pred, measure = "auc")
+auc.train <- auc.train@y.values
+plot(roc.perf, main = "ROC Curve", col = "blue", lwd = 2)
+abline(a = 0, b = 1, lty = 2, col = "red")
+text(x = .25, y = .65 ,paste("AUC = ", round(auc.train[[1]],3), sep = ""))
+```
+
+The Area Under the Curve (AUC) is a metric that summarizes the performance of the classifier across all possible threshold settings. A higher AUC value indicates better performance of the classifier. In this plot, the AUC is stated as 0.867, which suggests that the classifier is performing reasonably well, as an AUC of 1 indicates a perfect classifier, and an AUC of 0.5 represents a random classifier.
+
+The ROC curve itself shows how the true positive rate and false positive rate change as the classification threshold is varied. An ideal classifier would have an ROC curve that hugs the top-left corner of the plot, maximizing the true positive rate while minimizing the false positive rate.
+
+In this particular plot, the ROC curve exhibits a sharp upward curve towards the top-left corner, indicating that the classifier can achieve a high true positive rate with a relatively low false positive rate for certain threshold settings. However, the curve then flattens out, suggesting that further increases in the true positive rate come at the cost of a higher false positive rate.
+
+
+
+
+
+
+
